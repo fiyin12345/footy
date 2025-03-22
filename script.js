@@ -1,59 +1,64 @@
-AFRAME.registerComponent("move",{
-    init:function(){
-        let velocity= { x: 0, y:0, z: -0.1};
-        let spin = 0;
-        let rad = (30 * 3.14/180)
-        window.addEventListener("keydown",(e) => {
-            if(e.key === "w"){
-                this.el.setAttribute("rotation",{
-                    y:180
-                })
-            }
-            if(e.key === "a"){
-                this.el.setAttribute("rotation",{
-                    y:270
-                })
-            }
-            if(e.key === "s"){
-                this.el.setAttribute("rotation",{
-                    y:0
-                })
-            }
-            if(e.key === "d"){
-                this.el.setAttribute("rotation",{
-                    y:90
-                })
-            }
-            if(e.key === "e"){
-                el = this.el
-                pos = el.getAttribute("position")
-                 el.setAttribute("animation",{
-                property: "position",
-                to:`400 ${pos.y} ${pos.z}` , dur: "1000"
-                })
-                velocity.z = -Math.cos(rad) * 0.5;
-                velocity.y = Math.sin(rad) * 0.3;
-                spin = 0.01
-            }
-        })
-        this.el.sceneEL.addEventListener("tick",()=>{
-            if (Maths.abs(velocity.z)>0.01){
-            this.el.object3D.position.y += velocity.y
-            this.el.object3D.position.z += velocity.z
-            velocity.z*=0.99
-            velocity.y += spin
-            }
-            //spin = 0
-            //velocity.z = -0.1
-        })
-    },
-   // tick:function(){
-      //  cam = document.getElementById("look")
-       // pos = cam.getAttribute("position")
-       // this.el.setAttribute("position",{
-        //    x: pos.x,
-         //   y: pos.y -20, 
-         //   z: pos.z -5, 
-      //  })
-   // }
-})
+AFRAME.registerComponent("move", {
+  init: function () {
+    let velocity = { x: 0, y: 0, z: -0.1 };
+    let spin = 0;
+    let rad = 30 * Math.PI / 180;
+    let curlFactor = 0; // Curl strength
+
+    window.addEventListener("keydown", (e) => {
+      const el = this.el;
+
+      switch (e.key) {
+        case "w":
+          el.setAttribute("rotation", { y: 180 });
+          break;
+        case "a":
+          el.setAttribute("rotation", { y: 270 });
+          break;
+        case "s":
+          el.setAttribute("rotation", { y: 0 });
+          break;
+        case "d":
+          el.setAttribute("rotation", { y: 90 });
+          break;
+        case "e":
+          let pos = el.getAttribute("position");
+
+          // Apply forward movement
+          el.setAttribute("animation", {
+            property: "position",
+            to: `400 ${pos.y} ${pos.z}`,
+            dur: 1000
+          });
+
+          // Calculate initial velocity
+          velocity.z = -Math.cos(rad) * 0.5;
+          velocity.y = Math.sin(rad) * 0.3;
+
+          // Apply a slight side spin for curl
+          curlFactor = Math.random() > 0.5 ? 0.02 : -0.02; // Random left or right curl
+          spin = 0.01;
+          break;
+      }
+    });
+
+    this.el.sceneEl.addEventListener("tick", () => {
+      if (Math.abs(velocity.z) > 0.01) {
+        // Apply movement
+        this.el.object3D.position.y += velocity.y;
+        this.el.object3D.position.z += velocity.z;
+        this.el.object3D.position.x += curlFactor;
+
+        // Apply damping for a natural slowdown
+        velocity.z *= 0.99;
+        velocity.y += spin;
+        curlFactor *= 0.98; // Reduce curl over time
+
+        // Stop spin after a while
+        if (Math.abs(curlFactor) < 0.001) {
+          curlFactor = 0;
+        }
+      }
+    });
+  }
+});
